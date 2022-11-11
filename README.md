@@ -24,6 +24,24 @@ const App = () => (
 );
 ```
 
+# Nested filter example
+
+The following will return all the books written by author with id 2:
+
+```js
+<ReferenceInput
+  source="book"
+  reference="books"
+  filter={{
+    author: {
+      id: 2,
+    },
+  }}
+>
+  <SelectInput fullWidth optionText="name" />
+</ReferenceInput>
+```
+
 # License
 
 This data provider is licensed under the MIT License.

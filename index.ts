@@ -84,6 +84,10 @@ const raFilterToStrapi = (raFilter: any) => {
   let filters: any = {};
 
   Object.keys(raFilter).forEach((key) => {
+    if (typeof raFilter[key] === "object") {
+      return (filters[key] = raFilterToStrapi(raFilter[key]));
+    }
+
     // @ts-ignore
     const operator = OPERATORS[key.slice(-4)];
     if (key.slice(-2) === "_q") {
