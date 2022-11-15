@@ -1,6 +1,6 @@
 {
   "name": "ra-strapi-v4-rest",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "React Admin REST data provider for Strapi.js v4",
   "author": "Rafa Garrido (heyrafa.com)",
   "license": "MIT",

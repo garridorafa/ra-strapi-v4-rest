@@ -45,7 +45,7 @@ const strapiAttributesToRa = (attributes: any) => {
       newAttributes[key] = strapiArrayToRa(attributes[key]);
     }
     if (Array.isArray(attributes[key]?.data)) {
-      newAttributes[key] = strapiArrayToRa(attributes[key].data);
+      newAttributes[key] = attributes[key].data.map((object: any) => object.id);
     }
     if (attributes[key]?.data?.id && !attributes[key]?.data?.attributes?.mime) {
       newAttributes[key] = attributes[key].data.id;
@@ -81,6 +81,7 @@ const raEmptyAttributesToStrapi = (object: any) => {
  * @returns {Object} Equivalent filters to add in query string
  */
 const raFilterToStrapi = (raFilter: any) => {
+  if (!raFilter) return null;
   let filters: any = {};
 
   Object.keys(raFilter).forEach((key) => {
@@ -172,7 +173,11 @@ export const strapiRestProvider = (
 
   getMany: (resource, params) => {
     const query = {
-      filter: raFilterToStrapi({ id: params.ids }),
+      filters: {
+        id: {
+          $in: params.ids.map((f: any) => f.id),
+        },
+      },
     };
     const queryStringify = qs.stringify(query, {
       encodeValuesOnly: true,
