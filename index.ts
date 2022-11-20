@@ -53,6 +53,9 @@ const strapiAttributesToRa = (attributes: any) => {
     if (attributes[key]?.data === null) {
       newAttributes[key] = "";
     }
+    if (attributes[key]?.id) {
+      newAttributes[key] = strapiAttributesToRa(newAttributes[key]);
+    }
     if (attributes[key]?.data?.attributes?.mime) {
       newAttributes[key] = strapiObjectToRa(newAttributes[key].data);
     }
