@@ -119,6 +119,35 @@ const raFilterToStrapi = (raFilter: any) => {
 };
 
 /**
+ * Separate an object in multimedia files and data
+ * @param object React admin object
+ * @returns
+ */
+const separateMultimedia = (object: { [key: string]: any }) => {
+  let data = {};
+  let multimedia: { [key: string]: any } | null = {};
+
+  for (const key in object) {
+    if (Object.prototype.hasOwnProperty.call(object, key)) {
+      const element = object[key];
+      if (element?.rawFile) {
+        multimedia = { ...multimedia, [key]: element };
+      } else if (Array.isArray(element) && element[0]?.rawFile) {
+        multimedia = { ...multimedia, [key]: element };
+      } else {
+        data = { ...data, [key]: element };
+      }
+    }
+  }
+
+  if (Object.keys(multimedia).length === 0) {
+    multimedia = null;
+  }
+
+  return { data, multimedia };
+};
+
+/**
  * Maps react-admin queries to a Strapi V4 REST API
  *
  * @example
@@ -237,11 +266,41 @@ export const strapiRestProvider = (
       data: responses.map(({ json }) => json.data.id),
     })),
 
-  create: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}`, {
+  create: (resource, params) => {
+    let body;
+
+    const { data, multimedia } = separateMultimedia(params.data);
+
+    if (multimedia) {
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(raEmptyAttributesToStrapi(data)));
+
+      for (const key in multimedia) {
+        if (Object.prototype.hasOwnProperty.call(multimedia, key)) {
+          const element = multimedia[key];
+
+          if (Array.isArray(element)) {
+            element.forEach((f: any) => {
+              formData.append(`files.${key}`, f.rawFile, f.title);
+            });
+          } else {
+            formData.append(`files.${key}`, element.rawFile, element.title);
+          }
+        }
+      }
+
+      body = formData;
+    }
+
+    if (!multimedia) {
+      body = JSON.stringify({ data: raEmptyAttributesToStrapi(data) });
+    }
+
+    return httpClient(`${apiUrl}/${resource}`, {
       method: "POST",
-      body: JSON.stringify({ data: raEmptyAttributesToStrapi(params.data) }),
-    }).then(({ json }) => ({ data: strapiObjectToRa(json.data) })),
+      body,
+    }).then(({ json }) => ({ data: strapiObjectToRa(json.data) }));
+  },
 
   delete: (resource, params) =>
     httpClient(`${apiUrl}/${resource}/${params.id}`, {
