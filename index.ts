@@ -71,8 +71,16 @@ const strapiAttributesToRa = (attributes: any) => {
  */
 const raEmptyAttributesToStrapi = (object: any) => {
   let newObject: any = {};
+  let components: string[] = ["stages"];
+
   Object.keys(object).forEach((key) => {
-    newObject[key] = object[key] === "" ? null : object[key];
+    const newValue = object[key] === "" ? null : object[key];
+
+    if (components.includes(key)) {
+      newObject[key] = { data: newValue };
+    } else {
+      newObject[key] = newValue;
+    }
   });
 
   return newObject;
@@ -207,7 +215,7 @@ export const strapiRestProvider = (
     const query = {
       filters: {
         id: {
-          $in: params.ids.map((f: any) => f.id),
+          $in: params.ids,
         },
       },
     };
