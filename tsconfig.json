@@ -10,10 +10,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
-    "target": "es6",
+    "target": "es2016",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "lib": ["es6", "dom"]
+    "lib": ["es2016", "dom"]
   },
 
   "exclude": ["node_modules", "lib", "**/*.spec.ts"]
