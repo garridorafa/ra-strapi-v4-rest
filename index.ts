@@ -127,6 +127,44 @@ const raFilterToStrapi = (raFilter: any) => {
 };
 
 /**
+ * Turn React Admin params in Strapi equivalent request body.
+ * @param {Object} params React Admin params
+ * @returns {Object} Equivalent body to add in request body.
+ */
+const raToStrapiObj = (params: any) => {
+  let body: any;
+
+  const { data, multimedia } = separateMultimedia(params.data);
+
+  if (multimedia) {
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(raEmptyAttributesToStrapi(data)));
+
+    for (const key in multimedia) {
+      if (Object.prototype.hasOwnProperty.call(multimedia, key)) {
+        const element = multimedia[key];
+
+        if (Array.isArray(element)) {
+          element.forEach((f: any) => {
+            formData.append(`files.${key}`, f.rawFile, f.title);
+          });
+        } else {
+          formData.append(`files.${key}`, element.rawFile, element.title);
+        }
+      }
+    }
+
+    body = formData;
+  }
+
+  if (!multimedia) {
+    body = JSON.stringify({ data: raEmptyAttributesToStrapi(data) });
+  }
+
+  return body;
+};
+
+/**
  * Separate an object in multimedia files and data
  * @param object React admin object
  * @returns
@@ -275,34 +313,7 @@ export const strapiRestProvider = (
     })),
 
   create: (resource, params) => {
-    let body;
-
-    const { data, multimedia } = separateMultimedia(params.data);
-
-    if (multimedia) {
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(raEmptyAttributesToStrapi(data)));
-
-      for (const key in multimedia) {
-        if (Object.prototype.hasOwnProperty.call(multimedia, key)) {
-          const element = multimedia[key];
-
-          if (Array.isArray(element)) {
-            element.forEach((f: any) => {
-              formData.append(`files.${key}`, f.rawFile, f.title);
-            });
-          } else {
-            formData.append(`files.${key}`, element.rawFile, element.title);
-          }
-        }
-      }
-
-      body = formData;
-    }
-
-    if (!multimedia) {
-      body = JSON.stringify({ data: raEmptyAttributesToStrapi(data) });
-    }
+    const body = raToStrapiObj(params);
 
     return httpClient(`${apiUrl}/${resource}`, {
       method: "POST",
