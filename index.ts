@@ -44,7 +44,21 @@ const strapiAttributesToRa = (attributes: any) => {
     if (Array.isArray(attributes[key])) {
       newAttributes[key] = strapiArrayToRa(attributes[key]);
     }
-    if (Array.isArray(attributes[key]?.data)) {
+    if (
+      Array.isArray(attributes[key]?.data) &&
+      attributes[key]?.data[0]?.attributes?.mime
+    ) {
+      newAttributes[key] = attributes[key].data.map((image: any) => ({
+        id: image.id,
+        ...image.attributes,
+      }));
+
+      return;
+    }
+    if (
+      Array.isArray(attributes[key]?.data) &&
+      !attributes[key]?.data[0]?.attributes?.mime
+    ) {
       newAttributes[key] = attributes[key].data.map((object: any) => object.id);
     }
     if (attributes[key]?.data?.id && !attributes[key]?.data?.attributes?.mime) {
