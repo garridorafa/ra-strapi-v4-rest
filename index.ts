@@ -207,7 +207,7 @@ const separateMultimedia = (object: { [key: string]: any }) => {
       const element = object[key];
       if (element?.rawFile) {
         multimedia = { ...multimedia, [key]: element };
-      } else if (Array.isArray(element) && element[0]?.rawFile) {
+      } else if (Array.isArray(element) && element[0]?.mime) {
         multimedia = { ...multimedia, [key]: element };
       } else {
         data = { ...data, [key]: element };
