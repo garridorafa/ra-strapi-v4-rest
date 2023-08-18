@@ -152,22 +152,37 @@ const raToStrapiObj = (params: any) => {
 
   if (multimedia) {
     const formData = new FormData();
-    formData.append("data", JSON.stringify(raEmptyAttributesToStrapi(data)));
 
     for (const key in multimedia) {
       if (Object.prototype.hasOwnProperty.call(multimedia, key)) {
         const element = multimedia[key];
 
         if (Array.isArray(element)) {
+          let elementIds: any[] = [];
           element.forEach((f: any) => {
-            formData.append(`files.${key}`, f.rawFile, f.title);
+            f.rawFile instanceof File
+              ? formData.append(`files.${key}`, f.rawFile, f.title)
+              : elementIds.push(f.id);
           });
-        } else {
+
+          data[key] = elementIds;
+        }
+
+        if (
+          !Array.isArray(element) &&
+          !(element.rawFile instanceof File) &&
+          Object.prototype.hasOwnProperty.call(data, key)
+        ) {
+          data[key] = [element.id];
+        }
+
+        if (!Array.isArray(element) && element.rawFile instanceof File) {
           formData.append(`files.${key}`, element.rawFile, element.title);
         }
       }
     }
 
+    formData.append("data", JSON.stringify(raEmptyAttributesToStrapi(data)));
     body = formData;
   }
 
@@ -184,7 +199,7 @@ const raToStrapiObj = (params: any) => {
  * @returns
  */
 const separateMultimedia = (object: { [key: string]: any }) => {
-  let data = {};
+  let data: { [key: string]: any } = {};
   let multimedia: { [key: string]: any } | null = {};
 
   for (const key in object) {
@@ -250,7 +265,7 @@ export const strapiRestProvider = (
 
     const url = `${apiUrl}/${resource}?${POPULATE_ALL}&${queryStringify}`;
 
-    return httpClient(url, {}).then(({ headers, json }) => ({
+    return httpClient(url, {}).then(({ json }) => ({
       data: strapiArrayToRa(json.data),
       total: json.meta.pagination.total,
     }));
@@ -296,21 +311,18 @@ export const strapiRestProvider = (
     };
     const url = `${apiUrl}/${resource}?${POPULATE_ALL}&${stringify(query)}`;
 
-    return httpClient(url, {}).then(({ headers, json }) => ({
+    return httpClient(url, {}).then(({ json }) => ({
       data: strapiArrayToRa(json.data),
       total: json.meta.pagination.total,
     }));
   },
 
   update: (resource, params) => {
-    const { id, ...rest } = params;
+    const body = raToStrapiObj(params);
 
     return httpClient(`${apiUrl}/${resource}/${params.id}`, {
       method: "PUT",
-      body: JSON.stringify({
-        data: raEmptyAttributesToStrapi(rest.data),
-        id: Number(id),
-      }),
+      body,
     }).then(({ json }) => ({ data: strapiObjectToRa(json.data) }));
   },
 
