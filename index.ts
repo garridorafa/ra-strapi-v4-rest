@@ -305,15 +305,22 @@ export const strapiRestProvider = (
     const { field, order } = params.sort;
 
     const query = {
-      sort: JSON.stringify([field, order]),
-      range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
-      filter: JSON.stringify({
+      sort: [`${field}:${order}`],
+      pagination: {
+        page,
+        pageSize: perPage,
+      },
+      filters: raFilterToStrapi({
         ...params.filter,
-        [params.target]: params.id,
+        [params.target.split(".").join("][")]: params.id,
       }),
     };
-    const url = `${apiUrl}/${resource}?${POPULATE_ALL}&${stringify(query)}`;
 
+    const queryStringify = qs.stringify(query, {
+      encodeValuesOnly: true,
+    });
+    const url = `${apiUrl}/${resource}?${POPULATE_ALL}&${queryStringify}`;
+    
     return httpClient(url, {}).then(({ json }) => ({
       data: strapiArrayToRa(json.data),
       total: json.meta.pagination.total,
